@@ -174,7 +174,7 @@ def set_hosts(hosts, use_ssl=False, ssl_cert_path=None, timeout=60.0):
     Sets the Elasticsearch hosts to use
 
     Args:
-        hosts (str): A single hostname or URL, or list of hostnames or URLs
+        hosts (str | list): A single hostname or URL, or list of hostnames or URLs
         use_ssl (bool): Use a HTTPS connection to the server
         ssl_cert_path (str): Path to the certificate chain
         timeout (float): Timeout in seconds
@@ -228,43 +228,13 @@ def migrate_indexes(aggregate_indexes=None, forensic_indexes=None):
         aggregate_indexes (list): A list of aggregate index names
         forensic_indexes (list): A list of forensic index names
     """
-    version = 2
+    version = 3
     if aggregate_indexes is None:
         aggregate_indexes = []
     if forensic_indexes is None:
         forensic_indexes = []
     for aggregate_index_name in aggregate_indexes:
-        if not Index(aggregate_index_name).exists():
-            continue
-        aggregate_index = Index(aggregate_index_name)
-        doc = "doc"
-        fo_field = "published_policy.fo"
-        fo = "fo"
-        fo_mapping = aggregate_index.get_field_mapping(fields=[fo_field])
-        fo_mapping = fo_mapping[list(fo_mapping.keys())[0]]["mappings"]
-        if doc not in fo_mapping:
-            continue
-
-        fo_mapping = fo_mapping[doc][fo_field]["mapping"][fo]
-        fo_type = fo_mapping["type"]
-        if fo_type == "long":
-            new_index_name = "{0}-v{1}".format(aggregate_index_name, version)
-            body = {"properties": {"published_policy.fo": {
-                "type": "text",
-                "fields": {
-                    "keyword": {
-                        "type": "keyword",
-                        "ignore_above": 256
-                    }
-                }
-            }
-            }
-            }
-            Index(new_index_name).create()
-            Index(new_index_name).put_mapping(doc_type=doc, body=body)
-            reindex(connections.get_connection(), aggregate_index_name,
-                    new_index_name)
-            Index(aggregate_index_name).delete()
+        pass
 
     for forensic_index in forensic_indexes:
         pass
