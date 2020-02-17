@@ -100,7 +100,7 @@ setup(
                       'requests>=2.22.0', 'imapclient>=2.1.0',
                       'mail-parser>=3.11.0',
                       'dateparser>=0.7.2',
-                      'mailsuite>=1.5.4',
+                      'mailsuite @ git+https://github.com/BananaWanted/mailsuite.git@master',
                       'elasticsearch>=7.0.0,<8.0.0',
                       'elasticsearch-dsl>=7.0.0,<8.0.0',
                       'kafka-python>=1.4.4',
