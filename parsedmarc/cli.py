@@ -161,8 +161,7 @@ def _main():
     arg_parser.add_argument("-o", "--output",
                             help="write output files to the given directory")
     arg_parser.add_argument("-n", "--nameservers", nargs="+",
-                            help="nameservers to query "
-                                 "(default is Cloudflare's nameservers)")
+                            help="nameservers to query")
     arg_parser.add_argument("-t", "--dns_timeout",
                             help="number of seconds to wait for an answer "
                                  "from DNS (default: 2.0)",
@@ -291,7 +290,7 @@ def _main():
             if "timeout" in imap_config:
                 opts.imap_timeout = imap_config.getfloat("timeout")
             if "max_retries" in imap_config:
-                opts.imap_port = imap_config.getint("max_retries")
+                opts.imap_max_retries = imap_config.getint("max_retries")
             if "ssl" in imap_config:
                 opts.imap_ssl = imap_config.getboolean("ssl")
             if "skip_certificate_verification" in imap_config:
@@ -620,7 +619,7 @@ def _main():
             if opts.smtp_skip_certificate_verification:
                 verify = False
             email_results(results, opts.smtp_host, opts.smtp_from,
-                          opts.smtp_to, verify=verify,
+                          opts.smtp_to, port=opts.smtp_port, verify=verify,
                           username=opts.smtp_user,
                           password=opts.smtp_password,
                           subject=opts.smtp_subject)

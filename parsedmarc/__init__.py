@@ -11,6 +11,7 @@ from datetime import datetime
 from collections import OrderedDict
 from io import BytesIO, StringIO
 from gzip import GzipFile
+from socket import timeout
 import zipfile
 from csv import DictWriter
 import re
@@ -33,7 +34,7 @@ from parsedmarc.utils import is_outlook_msg, convert_outlook_msg
 from parsedmarc.utils import timestamp_to_human, human_timestamp_to_datetime
 from parsedmarc.utils import parse_email
 
-__version__ = "6.8.2"
+__version__ = "6.10.0"
 
 logging.basicConfig(
     format='%(levelname)8s:%(filename)s:%(lineno)d:'
@@ -86,10 +87,6 @@ def _parse_report_record(record, offline=False, nameservers=None,
     Returns:
         OrderedDict: The converted record
     """
-    if nameservers is None:
-        nameservers = ["1.1.1.1", "1.0.0.1",
-                       "2606:4700:4700::1111", "2606:4700:4700::1001",
-                       ]
     record = record.copy()
     new_record = OrderedDict()
     new_record_source = get_ip_address_info(record["row"]["source_ip"],
@@ -730,7 +727,10 @@ def parsed_forensic_reports_to_csv(reports):
     rows = parsed_forensic_reports_to_csv_rows(reports)
 
     for row in rows:
-        csv_writer.writerow(row)
+        new_row = {}
+        for key in new_row.keys():
+            new_row[key] = row[key]
+        csv_writer.writerow(new_row)
 
     return csv_file.getvalue()
 
@@ -1223,11 +1223,15 @@ def watch_inbox(host, username, password, callback, port=None, ssl=True,
                                            strip_attachment_payloads=sa)
         callback(res)
 
-    IMAPClient(host=host, username=username, password=password,
-               port=port, ssl=ssl, verify=verify,
-               initial_folder=reports_folder,
-               idle_callback=idle_callback,
-               idle_timeout=idle_timeout)
+    while True:
+        try:
+            IMAPClient(host=host, username=username, password=password,
+                       port=port, ssl=ssl, verify=verify,
+                       initial_folder=reports_folder,
+                       idle_callback=idle_callback,
+                       idle_timeout=idle_timeout)
+        except timeout:
+            logger.warning("IMAP connection timeout. Reconnecting...")
 
 
 def save_output(results, output_directory="output"):
